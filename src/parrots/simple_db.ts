@@ -1,3 +1,4 @@
+/** @module Parrots */
 import * as AWSMock from 'aws-sdk-mock'
 
 export class SimpleDB {

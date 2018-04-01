@@ -1,4 +1,7 @@
 /**
+ * @module Parrots
+ * @preferred
+ *
  * # Parrot
  *
  * Strictly speaking, a [parrot](http://www.dictionary.com/browse/parrot) is a

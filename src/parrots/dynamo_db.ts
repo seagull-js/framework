@@ -1,3 +1,4 @@
+/** @module Parrots */
 import * as AWS from 'aws-sdk'
 import * as AWSMock from 'aws-sdk-mock'
 
