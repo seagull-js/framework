@@ -3,6 +3,7 @@
     "baseUrl": "./src/",
     "paths": {
       "@cli": ["cli/"],
+      "@compiler": ["compiler/"],
       "@core": ["core/"],
       "@lib": ["./"],
       "@loader": ["loader/"],
