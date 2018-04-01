@@ -1,10 +1,33 @@
 import { Model } from '@core'
+import { DynamoDB } from '@parrots'
+import * as AWS from 'aws-sdk'
 import { expect } from 'chai'
 import { skip, slow, suite, test, timeout } from 'mocha-typescript'
 import Todo from './example/todo'
 
 @suite('Unit::Core::Model')
 class Test {
+  async before() {
+    DynamoDB.mock()
+    const ReadCapacityUnits = 1
+    const WriteCapacityUnits = 1
+    const ProvisionedThroughput = { ReadCapacityUnits, WriteCapacityUnits }
+    const AttributeDefinitions = [{ AttributeName: 'id', AttributeType: 'S' }]
+    const KeySchema = [{ AttributeName: 'id', KeyType: 'HASH' }]
+    const TableName = 'todo'
+    const params: AWS.DynamoDB.CreateTableInput = {
+      AttributeDefinitions,
+      KeySchema,
+      ProvisionedThroughput,
+      TableName,
+    }
+    await new AWS.DynamoDB().createTable(params).promise()
+  }
+
+  after() {
+    DynamoDB.restore()
+  }
+
   @test
   async 'models have inferrable names and are dasherized'() {
     // tslint:disable-next-line:max-classes-per-file
@@ -77,8 +100,7 @@ class Test {
   async 'can delete models interactively'() {
     const instance = await Todo.create({ done: false, text: 'stuff' })
     const id = instance._id
-    const status = await instance.remove()
-    expect(status).to.be.equal(true)
+    await instance.remove()
     const search = await Todo.find(id)
     expect(search).to.be.equal(undefined)
   }
@@ -107,8 +129,9 @@ class Test {
 
   @test
   async 'can remove all items'() {
+    await Todo.create({ done: false, text: 'stuff1' })
     const originalList = await Todo.all()
-    expect(originalList.length).to.be.above(0) // from previous tests
+    expect(originalList.length).to.be.above(0)
     await Todo.clear()
     const newList = await Todo.all()
     expect(newList.length).to.be.equal(0)

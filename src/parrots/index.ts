@@ -8,4 +8,5 @@
  * specific behavior, mostly from AWS Services.
  */
 
+export * from './dynamo_db'
 export * from './simple_db'

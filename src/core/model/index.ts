@@ -1,8 +1,10 @@
 /** @module Core */
+import * as AWS from 'aws-sdk'
 import * as dashify from 'dashify'
 import 'reflect-metadata'
 import { generate as newID } from 'shortid'
-import * as DB from './ddb'
+// import * as DB from './ddb'
+import { ReadOnlyConfig } from '../util'
 import field from './field'
 
 /**
@@ -38,8 +40,11 @@ export default class Model {
 
   // return a list of all objects in the database table
   static async all<T extends Model>(this: { new (): T }): Promise<T[]> {
-    const data = await DB.scanItems(new this()._name)
-    return data.map(item => Object.assign(new this(), item))
+    const instance = new this()
+    const TableName = instance._name
+    const client = instance.client()
+    const { Items } = await client.scan({ TableName }).promise()
+    return Items.map(item => Object.assign(new this(), item))
   }
 
   // remove ALL objects in the database table, returns number of removed items
@@ -62,19 +67,23 @@ export default class Model {
     this: { new (): T },
     id: string
   ): Promise<T> {
-    const data = await DB.getItem(new this()._name, 'id', id)
-    if (data && data.id) {
-      const instance: T = Object.assign(new this(), data)
-      return instance
-    } else {
-      return undefined
-    }
+    const instance = new this()
+    const TableName = instance._name
+    const client = instance.client()
+    const params = { Key: { id }, TableName }
+    const { Item } = await client.get(params).promise()
+    return Item ? Object.assign(new this(), Item) : undefined
   }
 
   // Remove an object from the database by id
   static async remove<T extends Model>(id: string): Promise<boolean> {
     const instance = await this.find(id)
-    return instance ? instance.remove() : false
+    return instance ? !!instance.remove() : false
+  }
+
+  // shorthand for getting a DynamoDB DocumentClient instance
+  private static client() {
+    return new Model().client()
   }
 
   /**
@@ -154,11 +163,11 @@ export default class Model {
    */
 
   // remove the object from the database
-  async remove(): Promise<boolean> {
-    if (!this._id) {
-      return false
-    }
-    return DB.removeItem(this._name, 'id', this._id)
+  async remove(): Promise<void> {
+    const TableName = this._name
+    const Key = { id: this._id }
+    const client = this.client()
+    client.delete({ Key, TableName }).promise()
   }
 
   // persist an object to the database, creating a new record or update existing
@@ -174,7 +183,15 @@ export default class Model {
       this.createdAt = new Date().getTime()
     }
     this.updatedAt = new Date().getTime()
-    await DB.putItem(this._name, this)
+    const client = this.client()
+    await client.put({ Item: this, TableName: this._name }).promise()
     return this
+  }
+
+  private client() {
+    const region = ReadOnlyConfig.config.region
+    const convertEmptyValues = true
+    const params = { convertEmptyValues, region }
+    return new AWS.DynamoDB.DocumentClient(params)
   }
 }
