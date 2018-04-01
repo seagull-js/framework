@@ -326,10 +326,8 @@ export class Shrimp {
   async _domain(): Promise<string> {
     const DB = new SimpleDB({ region: Shrimp.region })
     const { DomainNames } = await DB.listDomains().promise()
-    return find(DomainNames, domainName => {
-      const [appName, stageName, shrimpName, hash] = domainName.split('-')
-      return appName === Shrimp.pkgName && shrimpName === this._name
-    })
+    const rx = new RegExp(`-${this._name}-.+$`)
+    return find(DomainNames, domainName => rx.test(domainName))
   }
 
   /**

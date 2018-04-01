@@ -4,6 +4,7 @@
     "paths": {
       "@core": ["core/"],
       "@lib": ["./"],
+      "@parrots": ["parrots/"],
       "@scaffold": ["scaffold/"],
       "@settings": ["settings/"]
     },
