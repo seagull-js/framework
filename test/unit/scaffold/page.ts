@@ -23,7 +23,7 @@ class Test {
   'contains correct Page import'() {
     const gen = Page('MyPage', { path: '/something' })
     const code = gen.toString()
-    expect(code).to.contain(`import { Page } from '@seagull/core'`)
+    expect(code).to.contain(`import { Page } from '@seagull/framework'`)
   }
 
   @test

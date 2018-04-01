@@ -2,8 +2,10 @@
   "compilerOptions": {
     "baseUrl": "./src/",
     "paths": {
+      "@cli": ["cli/"],
       "@core": ["core/"],
       "@lib": ["./"],
+      "@loader": ["loader/"],
       "@parrots": ["parrots/"],
       "@scaffold": ["scaffold/"],
       "@settings": ["settings/"]

@@ -12,7 +12,7 @@ export interface IModelOptions {
 
 export function Model(name: string, options: IModelOptions): Class {
   const gen = new Class(name, 'Model')
-  gen.addNamedImports('@seagull/core', ['field', 'Model'])
+  gen.addNamedImports('@seagull/framework', ['field', 'Model'])
   if (!options.fields || !options.fields.length) {
     return gen
   }

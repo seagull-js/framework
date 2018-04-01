@@ -9,7 +9,7 @@ export interface IPageOptions {
 export function Page(name: string, options: IPageOptions): Class {
   const gen = new Class(name, 'Page<{}, {}>')
   gen.addDefaultImport('react', 'React', true)
-  gen.addNamedImports('@seagull/core', ['Page'])
+  gen.addNamedImports('@seagull/framework', ['Page'])
 
   const path = options.path.startsWith('/') ? options.path : `/${options.path}`
 

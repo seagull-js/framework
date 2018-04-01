@@ -13,7 +13,7 @@ export function JsonPackage(name: string, version): Json {
   gen.set('engineStrict', true)
   gen.set('engines', { node: '>= 6.10.3 < 7' })
   // add dependencies
-  gen.set('dependencies', { '@seagull/core': `^${version}` })
+  gen.set('dependencies', { '@seagull/framework': `^${version}` })
   gen.set('devDependencies', {
     '@types/history': '^4.6.0',
     '@types/node': '^8.0.25',

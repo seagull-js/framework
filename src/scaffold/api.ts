@@ -11,7 +11,7 @@ export interface IApiOptions {
 
 export function API(name: string, options: IApiOptions): Class {
   const gen = new Class(name, 'API')
-  gen.addNamedImports('@seagull/core', ['API', 'Request', 'Response'])
+  gen.addNamedImports('@seagull/framework', ['API', 'Request', 'Response'])
 
   if (isString(options.path)) {
     const path = options.path.startsWith('/')

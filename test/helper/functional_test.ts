@@ -1,11 +1,30 @@
+import * as fs from 'fs'
 import * as mockFS from 'mock-fs'
+import * as mockRequire from 'mock-require'
 import BaseTest from './base_test'
 
 export default class FunctionalTest extends BaseTest {
+  mockCredentials = (name: string) => {
+    process.env.HOME = '~'
+    delete process.env.AWS_PROFILE
+    this.mockFolder('~/.aws')
+    const lines = [
+      `[${name}]`,
+      'aws_access_key_id = AKID',
+      'aws_secret_access_key = YOUR_SECRET_KEY',
+    ]
+    fs.writeFileSync('~/.aws/credentials', lines.join('\n'))
+  }
+
   /**
    * mock a directory with a given package.json file
    */
   mockPackageFile = (path, txt) => mockFS({ [path]: { 'package.json': txt } })
+
+  /**
+   * mock all calls to @seagull/framework
+   */
+  mockRequire = () => mockRequire('@seagull/framework', '../../src/core/index')
 
   /**
    * set environment variables to lambda execution environment

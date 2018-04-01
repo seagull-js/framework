@@ -11,7 +11,7 @@ export interface IShrimpOptions {
 
 export function Shrimp(name: string, options: IShrimpOptions): Class {
   const gen = new Class(name, 'Shrimp')
-  gen.addNamedImports('@seagull/core', ['field', 'Shrimp'])
+  gen.addNamedImports('@seagull/framework', ['field', 'Shrimp'])
   if (!options.fields || !options.fields.length) {
     return gen
   }
