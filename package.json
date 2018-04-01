@@ -8,11 +8,11 @@
     "scripts": {
         "build": "rm -rf dist && tsc",
         "test:functional": "NODE_ENV=test mocha --opts test/functional/mocha.opts",
-        "test:functional:watch": "npm run test:functional -- --watch",
+        "test:functional:watch": "npm run test:functional -- --watch --reporter min",
         "test:unit": "NODE_ENV=test mocha --opts test/unit/mocha.opts",
-        "test:unit:watch": "npm run test:unit -- --watch",
+        "test:unit:watch": "npm run test:unit -- --watch --reporter min",
         "test": "NODE_ENV=test mocha --opts test/mocha.opts",
-        "test:watch": "npm run test -- --watch",
+        "test:watch": "npm run test -- --watch --reporter min",
         "docs": "rm -rf docs && typedoc --mode modules --excludeExternals --excludePrivate --excludeNotExported --out docs src"
     },
     "repository": {
