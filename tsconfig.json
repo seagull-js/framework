@@ -2,8 +2,8 @@
   "compilerOptions": {
     "baseUrl": "./src/",
     "paths": {
+      "@core": ["core/"],
       "@lib": ["./"],
-      "@pkg": ["pkg/"],
       "@scaffold": ["scaffold/"],
       "@settings": ["settings/"]
     },
@@ -18,10 +18,10 @@
     "outDir": "./dist",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "lib": ["esnext"],
+    "lib": ["es5", "es6", "es7", "esnext", "dom", "dom.iterable"],
     "jsx": "react"
   },
   "include": ["src/**/*", "test/**/*"],
-  "types": ["node"],
+  "types": ["node", "react", "react-dom"],
   "typeRoots": ["node_modules/@types"]
 }

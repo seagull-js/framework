@@ -3,7 +3,7 @@
   "extends": ["tslint:recommended", "tslint-config-prettier"],
   "jsRules": {},
   "rules": {
-    "quotemark": [true, "single", "avoid-escape"],
+    "quotemark": [true, "single", "jsx-double"],
     "member-access": [true, "no-public"]
   },
   "rulesDirectory": []
