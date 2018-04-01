@@ -1,5 +1,5 @@
 import { field, Shrimp } from '@core'
-import { SDB } from '@parrots'
+import { SimpleDB } from '@parrots'
 import { PackageJson } from '@settings'
 import * as AWS from 'aws-sdk'
 import 'chai/register-should'
@@ -15,10 +15,10 @@ class Todo extends Shrimp {
 // tslint:disable-next-line:max-classes-per-file
 @suite('Unit::Core::Shrimp')
 class Test {
-  sdb: SDB = null
+  sdb: SimpleDB = null
 
   async before() {
-    this.sdb = SDB.mock()
+    this.sdb = SimpleDB.mock()
     const d1 = '@seagull/framework-dev-Shrimp-123'
     const d2 = '@seagull/framework-dev-Todo-123'
     await new AWS.SimpleDB().createDomain({ DomainName: d1 }).promise()
@@ -26,7 +26,7 @@ class Test {
   }
 
   after() {
-    SDB.restore()
+    SimpleDB.restore()
   }
 
   @test
@@ -48,10 +48,11 @@ class Test {
 
   @test
   async 'can be created and fields get serialized to SimpleDB attributes'() {
-    Object.keys(this.sdb.db).length.should.be.equal(0)
+    const db = this.sdb.db['@seagull/framework-dev-Todo-123']
+    Object.keys(db).length.should.be.equal(0)
     const todo = await Todo.Create({ text: 'txt', done: false })
-    Object.keys(this.sdb.db).length.should.be.equal(1)
-    const attrs = this.sdb.db[todo._id]
+    Object.keys(db).length.should.be.equal(1)
+    const attrs = db[todo._id]
     attrs.should.be.an('array')
     attrs.should.have.length(5)
     find(attrs, a => a.Name === 'id').Value.length.should.be.above(0)
@@ -63,11 +64,12 @@ class Test {
 
   @test
   async 'can remove items from database'() {
-    Object.keys(this.sdb.db).length.should.be.equal(0)
+    const db = this.sdb.db['@seagull/framework-dev-Todo-123']
+    Object.keys(db).length.should.be.equal(0)
     const todo = await Todo.Create({ text: 'txt', done: false })
-    Object.keys(this.sdb.db).length.should.be.equal(1)
+    Object.keys(db).length.should.be.equal(1)
     await todo.remove()
-    Object.keys(this.sdb.db).length.should.be.equal(0)
+    Object.keys(db).length.should.be.equal(0)
   }
 
   @test

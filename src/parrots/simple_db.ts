@@ -1,8 +1,8 @@
 import * as AWSMock from 'aws-sdk-mock'
 
-export class SDB {
+export class SimpleDB {
   static mock() {
-    const sdb = new SDB()
+    const sdb = new SimpleDB()
     AWSMock.mock('SimpleDB', 'createDomain', sdb.createDomain)
     AWSMock.mock('SimpleDB', 'getAttributes', sdb.getAttributes)
     AWSMock.mock('SimpleDB', 'putAttributes', sdb.putAttributes)
@@ -14,31 +14,29 @@ export class SDB {
   static restore() {
     AWSMock.restore('SimpleDB')
   }
-
-  db: { [key: string]: object } = {}
-  domains: string[] = []
+  db: { [domain: string]: { [key: string]: any } } = {}
 
   createDomain = ({ DomainName }, cb) => {
-    this.domains.push(DomainName)
+    this.db[DomainName] = {}
     cb(null)
   }
 
-  deleteAttributes = ({ ItemName }, cb) => {
-    delete this.db[ItemName]
+  deleteAttributes = ({ DomainName, ItemName }, cb) => {
+    delete this.db[DomainName][ItemName]
     cb(null)
   }
 
-  getAttributes = ({ ItemName }, cb) => {
-    cb(null, { Attributes: this.db[ItemName] })
+  getAttributes = ({ DomainName, ItemName }, cb) => {
+    cb(null, { Attributes: this.db[DomainName][ItemName] })
   }
 
   listDomains = cb => {
-    const DomainNames = this.domains
+    const DomainNames = Object.keys(this.db)
     cb(null, { DomainNames })
   }
 
-  putAttributes = ({ ItemName, Attributes }, cb) => {
-    this.db[ItemName] = Attributes
+  putAttributes = ({ Attributes, DomainName, ItemName }, cb) => {
+    this.db[DomainName][ItemName] = Attributes
     cb(null, Attributes)
   }
 }
