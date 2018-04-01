@@ -10,8 +10,6 @@ class BodyTest {
   @test
   async 'Meta without anything works (does not crash)'() {
     const content = renderToStaticMarkup(<Meta title={'My title'} />)
-    // tslint:disable-next-line:no-console
-    console.log(content)
     expect(content).to.be.equal('')
   }
 

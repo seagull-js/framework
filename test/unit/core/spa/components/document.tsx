@@ -7,6 +7,10 @@ import { Helmet } from 'react-helmet'
 
 @suite('Unit::Core::SPA::Document')
 class Test {
+  after() {
+    delete process.env.config_mock
+  }
+
   @test
   async 'simple document without anything works'() {
     process.env.config_mock = JSON.stringify({})
