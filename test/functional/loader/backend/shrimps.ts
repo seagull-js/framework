@@ -4,11 +4,11 @@ import 'chai/register-should'
 import * as fs from 'fs'
 import { skip, slow, suite, test, timeout } from 'mocha-typescript'
 import { join } from 'path'
-import Test from '../../../helper/functional_test'
+import FunctionalTest from '../../../helper/functional_test'
 import { transpileFolder } from '../../../helper/transpile'
 
-@suite('Shrimps')
-class FunctionalTest extends Test {
+@suite('Functional::Loader::Shrimps')
+class Test extends FunctionalTest {
   before() {
     this.mockRequire()
     this.mockFolder('./tmp')

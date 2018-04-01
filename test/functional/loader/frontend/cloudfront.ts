@@ -4,7 +4,7 @@ import * as fs from 'fs'
 import { skip, slow, suite, test, timeout } from 'mocha-typescript'
 import FunctionalTest from '../../../helper/functional_test'
 
-@suite('Assets')
+@suite('Functional::Loader::Assets')
 class Test extends FunctionalTest {
   @test
   'can be instantiated'() {

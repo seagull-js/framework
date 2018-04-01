@@ -2,10 +2,10 @@ import { App } from '@loader'
 import { App as AppGenerator } from '@scaffold'
 import 'chai/register-should'
 import { skip, slow, suite, test, timeout } from 'mocha-typescript'
-import Test from '../../helper/functional_test'
+import FunctionalTest from '../../helper/functional_test'
 
-@suite('App')
-class FunctionalTest extends Test {
+@suite('Functional::Loader::App')
+class Test extends FunctionalTest {
   before() {
     this.mockFolder('./tmp')
   }

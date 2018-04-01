@@ -6,7 +6,7 @@ import { skip, slow, suite, test, timeout } from 'mocha-typescript'
 import FunctionalTest from '../../../helper/functional_test'
 import { transpileFolder } from '../../../helper/transpile'
 
-@suite('Backend')
+@suite('Functional::Loader::Backend')
 class Test extends FunctionalTest {
   before() {
     this.mockRequire()

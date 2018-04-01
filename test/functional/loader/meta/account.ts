@@ -6,7 +6,7 @@ import * as fs from 'fs'
 import { skip, slow, suite, test, timeout } from 'mocha-typescript'
 import FunctionalTest from '../../../helper/functional_test'
 
-@suite('Account')
+@suite('Functional::Loader::Account')
 class Test extends FunctionalTest {
   before() {
     const callback = cb => cb(null, { Account: 'A' })
