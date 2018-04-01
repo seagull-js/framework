@@ -1,7 +1,7 @@
-import { generateModel } from '@seagull/code-generators'
 import { Command, command, option, Options, param } from 'clime'
 import { join } from 'path'
 import * as shell from 'shelljs'
+import { Model } from '../../../scaffold'
 import { log } from '../../lib/logger'
 
 // tslint:disable-next-line:max-classes-per-file
@@ -29,7 +29,7 @@ export default class extends Command {
         }
         return { name: fieldName, type, initial: initialValues[type] }
       })
-    const gen = generateModel(name, { fields: dataFields })
+    const gen = Model(name, { fields: dataFields })
     shell.mkdir('-p', 'models')
     const dest = join(shell.pwd().toString(), 'models', `${name}.ts`)
     gen.toFile(dest)

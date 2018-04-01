@@ -1,7 +1,7 @@
-import { generateRobotsTxt } from '@seagull/code-generators'
 import { Command, command, metadata } from 'clime'
 import { join } from 'path'
 import * as shell from 'shelljs'
+import { ApiRobots } from '../../../scaffold'
 import { log } from '../../lib/logger'
 
 // tslint:disable-next-line:max-classes-per-file
@@ -9,7 +9,7 @@ import { log } from '../../lib/logger'
 export default class extends Command {
   @metadata
   execute() {
-    const gen = generateRobotsTxt()
+    const gen = ApiRobots()
     const pwd = shell.pwd().toString()
     const dest = join(pwd, 'backend', 'api', `RobotsTxt.ts`)
     gen.toFile(dest)

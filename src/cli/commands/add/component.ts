@@ -1,7 +1,7 @@
-import { generateComponentTsx } from '@seagull/code-generators'
 import { Command, command, option, Options, param } from 'clime'
 import { join } from 'path'
 import * as shell from 'shelljs'
+import { Component } from '../../../scaffold'
 import { log } from '../../lib/logger'
 
 export class SomeOptions extends Options {
@@ -23,7 +23,7 @@ export default class extends Command {
     options?: SomeOptions
   ) {
     const classic = options && options.class
-    const gen = generateComponentTsx(name, classic)
+    const gen = Component(name, classic)
     const pwd = shell.pwd().toString()
     const dest = join(pwd, 'frontend', 'components', `${name}.tsx`)
     shell.mkdir('-p', join(pwd, 'frontend', 'components'))

@@ -1,10 +1,10 @@
-import { generateAPI } from '@seagull/code-generators'
 import { Command, command, option, Options, param } from 'clime'
 import { join } from 'path'
 import * as shell from 'shelljs'
+import { API } from '../../../scaffold'
 import { log } from '../../lib/logger'
 
-export class SomeOptions extends Options {
+export class AddApiOptions extends Options {
   @option({
     description: 'url path for the api handler',
     flag: 'p',
@@ -50,9 +50,9 @@ export default class extends Command {
   execute(
     @param({ description: 'name of the api handler', required: true })
     name: string,
-    options: SomeOptions
+    options: AddApiOptions
   ) {
-    const gen = generateAPI(name, options)
+    const gen = API(name, options)
     const pwd = shell.pwd().toString()
     const dest = join(pwd, 'backend', 'api', `${name}.ts`)
     gen.toFile(dest)

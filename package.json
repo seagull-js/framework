@@ -22,6 +22,7 @@
   "author": "Maximilian Stroh <hisako1337@gmail.com>",
   "license": "LGPL-3.0",
   "devDependencies": {
+    "@seagull/package-config": "^0.3.5",
     "@types/chai": "^4.1.2",
     "@types/history": "^4.6.2",
     "@types/lodash": "^4.14.103",
@@ -47,6 +48,7 @@
     "typescript": "^2.7.2"
   },
   "dependencies": {
+    "@seagull/build-tools": "^0.1.4",
     "@types/react": "^16.1.0",
     "@types/react-dom": "^16.0.4",
     "aws-lambda": "^0.1.2",
@@ -54,6 +56,7 @@
     "cloudformation-declarations": "^0.1.2",
     "csstips": "^0.2.3",
     "dashify": "^1.0.0",
+    "decache": "^4.4.0",
     "lodash": "^4.17.5",
     "package-json": "^4.0.1",
     "prettier": "^1.10.2",
@@ -67,9 +70,11 @@
     "require-from-string": "^2.0.1",
     "shelljs": "^0.8.1",
     "shortid": "^2.2.8",
+    "stoppable": "^1.0.5",
     "ts-simple-ast": "^8.1.0",
     "typescript-memoize": "^1.0.0-alpha.3",
-    "typestyle": "^1.7.2"
+    "typestyle": "^1.7.2",
+    "yamljs": "^0.3.0"
   },
   "peerDependencies": {
     "aws-sdk": "^2.209.0",

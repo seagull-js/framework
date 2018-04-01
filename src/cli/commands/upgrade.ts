@@ -7,6 +7,6 @@ import * as shell from 'shelljs'
 export default class extends Command {
   @metadata
   async execute() {
-    shell.exec('npm update -g @seagull/cli')
+    shell.exec('npm update -g @seagull/framework')
   }
 }

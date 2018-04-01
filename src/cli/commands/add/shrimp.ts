@@ -1,7 +1,7 @@
-import { generateShrimp } from '@seagull/code-generators'
 import { Command, command, option, Options, param } from 'clime'
 import { join } from 'path'
 import * as shell from 'shelljs'
+import { Shrimp } from '../../../scaffold'
 import { log } from '../../lib/logger'
 
 // tslint:disable-next-line:max-classes-per-file
@@ -29,7 +29,7 @@ export default class extends Command {
         }
         return { name: fieldName, type, initial: initialValues[type] }
       })
-    const gen = generateShrimp(name, { fields: dataFields })
+    const gen = Shrimp(name, { fields: dataFields })
     shell.mkdir('-p', 'backend/shrimps')
     const dest = join(process.cwd(), 'backend', 'shrimps', `${name}.ts`)
     gen.toFile(dest)
