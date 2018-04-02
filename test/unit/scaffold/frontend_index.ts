@@ -22,12 +22,18 @@ class Test {
 
   @test
   'can have array of pages'() {
-    const gen = new FrontendIndex(['index', 'hello', 'world'])
+    const pages = ['index', 'hello', 'world']
+    const stores = ['a', 'b', 'c']
+    const gen = new FrontendIndex(pages, stores)
     const code = gen.toString()
     code.should.contain('export const pages = [')
     code.should.contain(`require('index')`)
     code.should.contain(`require('hello')`)
     code.should.contain(`require('world')`)
+    code.should.contain('export const stores = [')
+    code.should.contain(`require('a')`)
+    code.should.contain(`require('b')`)
+    code.should.contain(`require('c')`)
   }
 
   @test
