@@ -16,8 +16,10 @@ export function transpileFile(from: string, to: string, opts?: any) {
   const target = ts.ScriptTarget.ES2015
   const compilerOptions = opts || { module, target }
   compilerOptions.jsx = ts.JsxEmit.React
-  const result = ts.transpileModule(sourceText, { compilerOptions })
-  write(to, result.outputText)
+  const { outputText } = ts.transpileModule(sourceText, { compilerOptions })
+  const replacer = '$1;\nexports.handler = $2.dispatch.bind($2)'
+  const modified = outputText.replace(/(exports.default = (\w+))/, replacer)
+  write(to, modified)
 }
 
 /**

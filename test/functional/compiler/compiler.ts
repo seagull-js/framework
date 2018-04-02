@@ -1,5 +1,5 @@
 import { Compiler } from '@compiler'
-import { API, App } from '@scaffold'
+import { API, App, Page } from '@scaffold'
 import 'chai/register-should'
 import * as fs from 'fs'
 import { skip, slow, suite, test, timeout } from 'mocha-typescript'
@@ -36,35 +36,31 @@ class Test extends FunctionalTest {
     const code = fs.readFileSync(jsPath, 'utf-8')
     code.should.be.a('string')
     code.should.contain('class Demo')
+    code.should.contain('Demo.dispatch.bind(Demo)') // black magic!
   }
 
   @test
-  async 'can watch a source folder'() {
+  async 'can watch a source folder including TSX files'() {
     fs.mkdirSync(path.join('./tmp', 'backend'))
     fs.mkdirSync(path.join('./tmp', 'frontend'))
+    fs.mkdirSync(path.join('./tmp', 'frontend', 'pages'))
     const compiler = new Compiler('./tmp')
     compiler.watch()
-    API('Demo', {}).toFile(path.resolve('./tmp/backend/Demo.ts'))
-    await sleep(100) // enough time for "nextTick" since compiling is synchronous
-    const jsPath = path.resolve('./tmp/.seagull/dist/backend/Demo.js')
-    const code = fs.readFileSync(jsPath, 'utf-8')
-    code.should.be.a('string')
-    code.should.contain('class Demo')
-  }
-
-  @test
-  async 'can compile a complete app folder including TSX files'() {
-    new App('demo', '0.0.1').toFolder(path.resolve('./tmp/demo'))
-    const compiler = new Compiler('./tmp/demo')
-    compiler.compile()
-    const jsPath = './tmp/demo/.seagull/dist/frontend/pages/hello.js'
-    const code = fs.readFileSync(path.resolve(jsPath), 'utf-8')
-    code.should.be.a('string')
-    code.should.contain('HelloPage')
-    code.should.contain('React.createElement')
-    const pagesPath = path.resolve('./tmp/demo/.seagull/dist/frontend/pages/')
-    const files = fs.readdirSync(pagesPath)
-    files.should.be.deep.equal(['hello.js'])
+    const api = API('Demo', {})
+    api.toFile(path.resolve('./tmp/backend/Demo.ts'))
+    const page = Page('Hello', { path: '/' })
+    page.toFile(path.resolve('./tmp/frontend/pages/Hello.ts'))
+    await sleep(10) // enough time for "nextTick" since compiling is synchronous
+    compiler.stop()
+    const apiPath = path.resolve('./tmp/.seagull/dist/backend/Demo.js')
+    const apiCode = fs.readFileSync(apiPath, 'utf-8')
+    apiCode.should.be.a('string')
+    apiCode.should.contain('class Demo')
+    const pagePath = './tmp/.seagull/dist/frontend/pages/Hello.js'
+    const pageCode = fs.readFileSync(path.resolve(pagePath), 'utf-8')
+    pageCode.should.be.a('string')
+    pageCode.should.contain('Hello')
+    pageCode.should.contain('React.createElement')
   }
 
   @test
