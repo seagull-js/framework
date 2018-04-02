@@ -31,11 +31,12 @@ export class Compiler {
 
   /** watch the [[srcFolder]] and transpile individual files on change */
   watch() {
-    const folders = this.codeFolders.map(folder => join(this.srcFolder, folder))
-    this.watcher = chokidar.watch(folders)
-    this.watcher.on('add', path => this.compileCodeFile(path))
-    this.watcher.on('change', path => this.compileCodeFile(path))
-    this.watcher.on('unlink', path => this.deleteFile(path))
+    const folders = this.codeFolders.map(f => join(this.srcFolder, f))
+    this.watcher = chokidar
+      .watch(folders, { ignoreInitial: false })
+      .on('add', this.compileCodeFile)
+      .on('change', this.compileCodeFile)
+      .on('unlink', this.deleteFile)
   }
 
   stop() {

@@ -9,17 +9,30 @@ import * as ts from 'typescript'
  *
  * @param from absolute path to the source file
  * @param to absolute path to the destination file
+ * @param opts tsconfig settings
  */
 export function transpileFile(from: string, to: string, opts?: any) {
   const sourceText = fs.readFileSync(from, 'utf-8')
+  transpileCode(sourceText, to, opts)
+}
+
+/**
+ * Transpile a given blob of typescript code directly to a javascript file.
+ * Will append an additional export (besides `default`) called `dispatch` which
+ * has a proper `this` bound to it. Neccessary for APIs on AWS Lambda invokes.
+ *
+ * @param sourceText the code as string representation
+ * @param to absolute path to the destination file
+ * @param opts tsconfig settings
+ */
+export function transpileCode(sourceText: string, to: string, opts?: any) {
   const module = ts.ModuleKind.CommonJS
   const target = ts.ScriptTarget.ES2015
   const compilerOptions = opts || { module, target }
   compilerOptions.jsx = ts.JsxEmit.React
   const { outputText } = ts.transpileModule(sourceText, { compilerOptions })
-  const replacer = '$1;\nexports.handler = $2.dispatch.bind($2)'
-  const modified = outputText.replace(/(exports.default = (\w+))/, replacer)
-  write(to, modified)
+  const code = modifyApiCodeExports(outputText)
+  write(to, code)
 }
 
 /**
@@ -28,6 +41,7 @@ export function transpileFile(from: string, to: string, opts?: any) {
  *
  * @param from absolute path to the source folder
  * @param to absolute path to the destination folder
+ * @param opts tsconfig settings
  */
 export function transpileFolder(from: string, to: string, opts?: any) {
   const srcList = listFiles(from)
@@ -55,4 +69,12 @@ function listFiles(cwd: string): string[] {
     const list = names.map(f => listFiles(`${cwd}/${f}`))
     return flatten(list)
   }
+}
+
+// modify the script exports for lambda usage
+function modifyApiCodeExports(code: string): string {
+  const isAPI = code.includes('extends framework_1.API')
+  const matcher = /(exports.default = (\w+))/
+  const replacer = '$1;\nexports.handler = $2.dispatch.bind($2)'
+  return isAPI ? code.replace(matcher, replacer) : code
 }
