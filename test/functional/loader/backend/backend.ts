@@ -1,10 +1,10 @@
+import { transpileFolder } from '@compiler'
 import { Backend } from '@loader'
 import { API, Shrimp } from '@scaffold'
 import 'chai/register-should'
 import * as fs from 'fs'
 import { skip, slow, suite, test, timeout } from 'mocha-typescript'
 import FunctionalTest from '../../../helper/functional_test'
-import { transpileFolder } from '../../../helper/transpile'
 
 @suite('Functional::Loader::Backend')
 class Test extends FunctionalTest {

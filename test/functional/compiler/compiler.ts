@@ -1,343 +1,81 @@
-// import { expect } from 'chai'
-// import {
-//   existsSync,
-//   mkdirSync,
-//   readFileSync,
-//   renameSync,
-//   rmdirSync,
-//   unlinkSync,
-//   writeFileSync,
-// } from 'fs'
-// import { skip, slow, suite, test, timeout } from 'mocha-typescript'
-// import { join } from 'path'
-// import * as shell from 'shelljs'
-// import { sleep } from 'villa'
-// import { Compiler } from '../../src/compiler'
-// import { skipCI } from '../helper/ci'
-// import FunctionalTest from '../helper/functional_test'
+import { Compiler } from '@compiler'
+import { API, App } from '@scaffold'
+import 'chai/register-should'
+import * as fs from 'fs'
+import { skip, slow, suite, test, timeout } from 'mocha-typescript'
+import * as path from 'path'
+import FunctionalTest from '../../helper/functional_test'
 
-// @suite('builder::compiler')
-// class CompilerBuilderTest extends FunctionalTest {
-//   @slow(5000)
-//   @test
-//   async 'can compile a file staticly'() {
-//     this.addPage('SomePage', { path: '/some_url' })
-//     Compiler.compile()
-//     const file = join(
-//       this.appDir,
-//       '.seagull',
-//       'dist',
-//       'frontend',
-//       'pages',
-//       'SomePage.js'
-//     )
-//     expect(existsSync(file)).to.be.equal(true)
-//   }
+const sleep = ms => new Promise((resolve, reject) => setTimeout(resolve, ms))
 
-//   @slow(5000)
-//   @timeout(60000)
-//   @test
-//   async 'watching compiler notifies about finished initial compile'() {
-//     this.addPage('SomePage', { path: '/some_url' })
-//     const compiler = new Compiler()
-//     for await (const noMsg of compiler.watch()) {
-//       expect(true).equals(true)
-//       break
-//     }
-//     compiler.stop()
-//   }
+@suite('Functional::Compiler::Compiler')
+class Test extends FunctionalTest {
+  before() {
+    this.mockFolder(path.resolve('./tmp'))
+  }
 
-//   @slow(5000)
-//   @timeout(60000)
-//   @test
-//   async 'watching compiler should stop on stop message'() {
-//     this.addPage('SomePage', { path: '/some_url' })
-//     const compiler = new Compiler()
-//     const watchIterator = compiler.watch()
-//     // initial
-//     await watchIterator.next()
-//     compiler.stop()
-//     for await (const noMsg of watchIterator) {
-//       expect(true).equals(false)
-//     }
-//   }
+  after() {
+    this.restoreFolder()
+  }
 
-//   @slow(5000)
-//   @timeout(60000)
-//   @test
-//   async 'watching compiler should break await loop on stop message'() {
-//     this.addPage('SomePage', { path: '/some_url' })
-//     const compiler = new Compiler()
-//     const watchIterator = compiler.watch()
-//     // initial
-//     let iterations = 0
-//     for await (const noMsg of watchIterator) {
-//       if (iterations === 0) {
-//         compiler.stop()
-//         iterations++
-//         expect(true).equals(true)
-//         continue
-//       }
-//       // should never be called
-//       expect(true).equals(false)
-//     }
-//   }
+  @test
+  'can be instantiated'() {
+    const compiler = new Compiler('./tmp')
+    compiler.should.be.an('object')
+    compiler.should.be.instanceOf(Compiler)
+  }
 
-//   @skipCI
-//   @timeout(60000)
-//   @test
-//   async 'watching compiler compiles added file'() {
-//     const file = join(
-//       this.appDir,
-//       '.seagull',
-//       'dist',
-//       'frontend',
-//       'pages',
-//       'AddedFile.js'
-//     )
-//     const compiler = new Compiler()
-//     const compilationIterator = compiler.watch()
+  @test
+  'can compile a source folder'() {
+    fs.mkdirSync(path.join('./tmp', 'backend'))
+    fs.mkdirSync(path.join('./tmp', 'frontend'))
+    API('Demo', {}).toFile(path.join('./tmp/backend/Demo.ts'))
+    const compiler = new Compiler('./tmp')
+    compiler.compile()
+    const jsPath = path.join('./tmp/.seagull/dist/backend/Demo.js')
+    const code = fs.readFileSync(jsPath, 'utf-8')
+    code.should.be.a('string')
+    code.should.contain('class Demo')
+  }
 
-//     await compilationIterator.next()
-//     expect(existsSync(file)).to.be.equal(false)
+  @test
+  async 'can watch a source folder'() {
+    fs.mkdirSync(path.join('./tmp', 'backend'))
+    fs.mkdirSync(path.join('./tmp', 'frontend'))
+    const compiler = new Compiler('./tmp')
+    compiler.watch()
+    API('Demo', {}).toFile(path.resolve('./tmp/backend/Demo.ts'))
+    await sleep(100) // enough time for "nextTick" since compiling is synchronous
+    const jsPath = path.resolve('./tmp/.seagull/dist/backend/Demo.js')
+    const code = fs.readFileSync(jsPath, 'utf-8')
+    code.should.be.a('string')
+    code.should.contain('class Demo')
+  }
 
-//     this.addPage('AddedFile', { path: '/some_url' })
+  @test
+  async 'can compile a complete app folder including TSX files'() {
+    new App('demo', '0.0.1').toFolder(path.resolve('./tmp/demo'))
+    const compiler = new Compiler('./tmp/demo')
+    compiler.compile()
+    const jsPath = './tmp/demo/.seagull/dist/frontend/pages/hello.js'
+    const code = fs.readFileSync(path.resolve(jsPath), 'utf-8')
+    code.should.be.a('string')
+    code.should.contain('HelloPage')
+    code.should.contain('React.createElement')
+    const pagesPath = path.resolve('./tmp/demo/.seagull/dist/frontend/pages/')
+    const files = fs.readdirSync(pagesPath)
+    files.should.be.deep.equal(['hello.js'])
+  }
 
-//     await compilationIterator.next()
-//     expect(existsSync(file)).to.be.equal(true)
-
-//     compiler.stop()
-//   }
-
-//   @skipCI
-//   @timeout(60000)
-//   @test
-//   async 'watching compiler compiles multiple added files'() {
-//     const file1 = join(
-//       this.appDir,
-//       '.seagull',
-//       'dist',
-//       'frontend',
-//       'pages',
-//       'AddedFile1.js'
-//     )
-
-//     const file2 = join(
-//       this.appDir,
-//       '.seagull',
-//       'dist',
-//       'frontend',
-//       'pages',
-//       'AddedFile2.js'
-//     )
-//     const compiler = new Compiler()
-//     const compilationIterator = compiler.watch()
-
-//     await compilationIterator.next()
-//     expect(existsSync(file1)).to.be.equal(false)
-//     expect(existsSync(file2)).to.be.equal(false)
-
-//     this.addPage('AddedFile1', { path: '/some_url' })
-//     this.addPage('AddedFile2', { path: '/some_url' })
-
-//     await compilationIterator.next()
-//     expect(existsSync(file1)).to.be.equal(true)
-//     expect(existsSync(file2)).to.be.equal(true)
-
-//     compiler.stop()
-//   }
-
-//   @timeout(60000)
-//   @test
-//   async 'stopped watching compiler does not compile added'() {
-//     const file = join(
-//       this.appDir,
-//       '.seagull',
-//       'dist',
-//       'frontend',
-//       'pages',
-//       'SomeStoppedAddedPage.js'
-//     )
-
-//     const compiler = new Compiler()
-//     const compilationIterator = compiler.watch()
-//     await compilationIterator.next()
-//     compiler.stop()
-
-//     this.addPage('SomeStoppedAddedPage', { path: '/some_url' })
-//     await sleep(500)
-//     expect(existsSync(file)).to.be.equal(false)
-//   }
-
-//   @timeout(60000)
-//   @test
-//   async 'stopped watching compiler does not compile changed'() {
-//     const file = join(
-//       this.appDir,
-//       '.seagull',
-//       'dist',
-//       'frontend',
-//       'pages',
-//       'SomeStoppedChangedPage.js'
-//     )
-//     const changedCode = 'const x = 3'
-//     this.addPage('SomeStoppedChangedPage', { path: '/some_url' })
-//     const compiler = new Compiler()
-//     const compilationIterator = compiler.watch()
-//     await compilationIterator.next()
-//     compiler.stop()
-
-//     await sleep(100)
-//     writeFileSync(
-//       join(this.appDir, 'frontend', 'pages', 'SomeStoppedChangedPage.tsx'),
-//       changedCode
-//     )
-
-//     await sleep(500)
-//     expect(readFileSync(file, 'utf8')).to.be.not.equal(changedCode)
-//   }
-
-//   @timeout(60000)
-//   @test
-//   async 'watching compiler compiles changed file'() {
-//     const file = join(
-//       this.appDir,
-//       '.seagull',
-//       'dist',
-//       'frontend',
-//       'pages',
-//       'SomeChangedPage.js'
-//     )
-//     const changedCode = 'const x = 3'
-
-//     this.addPage('SomeChangedPage', { path: '/some_url' })
-//     const compiler = new Compiler()
-//     const compilationIterator = compiler.watch()
-//     await compilationIterator.next()
-
-//     writeFileSync(
-//       join(this.appDir, 'frontend', 'pages', 'SomeChangedPage.tsx'),
-//       changedCode
-//     )
-
-//     await compilationIterator.next()
-//     const newFileContent = readFileSync(file, 'utf8')
-//     // tslint:disable-next-line:no-unused-expression
-//     expect(newFileContent.indexOf(changedCode) > -1).to.be.true
-//     compiler.stop()
-//   }
-
-//   @timeout(60000)
-//   @test
-//   async 'watching compiler compiles renamed file'() {
-//     const file = join(
-//       this.appDir,
-//       '.seagull',
-//       'dist',
-//       'frontend',
-//       'pages',
-//       'SomeRenamedPage.js'
-//     )
-//     const renamed = join(
-//       this.appDir,
-//       '.seagull',
-//       'dist',
-//       'frontend',
-//       'pages',
-//       'Renamed.js'
-//     )
-
-//     this.addPage('SomeRenamedPage', { path: '/some_url' })
-//     const compiler = new Compiler()
-//     const compilationIterator = compiler.watch()
-//     await compilationIterator.next()
-//     expect(existsSync(file)).to.be.equal(true)
-
-//     renameSync(
-//       join(this.appDir, 'frontend', 'pages', 'SomeRenamedPage.tsx'),
-//       'Renamed.tsx'
-//     )
-
-//     await compilationIterator.next()
-//     expect(existsSync(file)).to.be.equal(false)
-//     expect(existsSync(renamed)).to.be.equal(false)
-//     compiler.stop()
-//   }
-
-//   @timeout(60000)
-//   @test
-//   async 'watching compiler removes deleted file'() {
-//     const file = join(
-//       this.appDir,
-//       '.seagull',
-//       'dist',
-//       'frontend',
-//       'pages',
-//       'SomeDeletedPage.js'
-//     )
-
-//     this.addPage('SomeDeletedPage', { path: '/some_url' })
-//     const compiler = new Compiler()
-//     const compilationIterator = compiler.watch()
-//     await compilationIterator.next()
-
-//     unlinkSync(join(this.appDir, 'frontend', 'pages', 'SomeDeletedPage.tsx'))
-
-//     await compilationIterator.next()
-//     expect(existsSync(file)).to.be.equal(false)
-//     compiler.stop()
-//   }
-
-//   @timeout(60000)
-//   @test
-//   async 'watching compiler removes deleted file in deleted folder'() {
-//     const file = join(
-//       this.appDir,
-//       '.seagull',
-//       'dist',
-//       'frontend',
-//       'pages',
-//       'SomeDeletedPage.js'
-//     )
-
-//     this.addPage('SomeDeletedPage', { path: '/some_url' })
-//     const compiler = new Compiler()
-//     const compilationIterator = compiler.watch()
-//     await compilationIterator.next()
-//     shell.rm('-Rf', join(this.appDir, 'frontend', 'pages'))
-
-//     await compilationIterator.next()
-//     expect(existsSync(file)).to.be.equal(false)
-//     compiler.stop()
-//   }
-
-//   @skipCI
-//   @timeout(60000)
-//   @test
-//   async 'watching compiler compiles file in new folder'() {
-//     const file = join(
-//       this.appDir,
-//       '.seagull',
-//       'dist',
-//       'frontend',
-//       'pager',
-//       'newFolderFile.js'
-//     )
-//     const compiler = new Compiler()
-//     const compilationIterator = compiler.watch()
-
-//     await compilationIterator.next()
-//     expect(existsSync(file)).to.be.equal(false)
-
-//     mkdirSync(join(this.appDir, 'frontend', 'pager'))
-
-//     writeFileSync(
-//       join(this.appDir, 'frontend', 'pager', 'newFolderFile.ts'),
-//       'const x = 3'
-//     )
-//     await compilationIterator.next()
-//     expect(existsSync(file)).to.be.equal(true)
-
-//     compiler.stop()
-//   }
-// }
+  @test
+  async 'can finalize a project with deps, config & bundling'() {
+    new App('demo', '0.0.1').toFolder(path.resolve('./tmp/demo'))
+    const compiler = new Compiler('./tmp/demo')
+    compiler.compile()
+    await compiler.finalize()
+    const files = fs.readdirSync('./tmp/demo/.seagull')
+    files.should.be.deep.equal(['dist', 'node_modules', 'package.json'])
+    // TODO: serverless.yaml
+    // TODO: bundle.js
+  }
+}

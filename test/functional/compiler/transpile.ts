@@ -7,7 +7,7 @@ import * as rfs from 'require-from-string'
 import FunctionalTest from '../../helper/functional_test'
 import { transpileFile, transpileFolder } from '../../helper/transpile'
 
-@suite('Functional::Helper::Transpile')
+@suite('Functional::Compiler::Transpile')
 class Test extends FunctionalTest {
   before() {
     // fill the initial require cache before mocking FS
