@@ -6,7 +6,7 @@
 [![styled with prettier](https://img.shields.io/badge/styled_with-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
 [![TypeScript](https://badges.frapsoft.com/typescript/code/typescript.svg?v=101)](https://github.com/ellerbrock/typescript-badges/)
 
-Todo: description
+Todo: Monorepo for all seagull things. Urgently needed for sane refactoring, feature development and documentation purposes.
 
 ## Example Usage
 
