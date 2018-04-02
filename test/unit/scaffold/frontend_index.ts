@@ -5,7 +5,7 @@ import { skip, slow, suite, test, timeout } from 'mocha-typescript'
 import { join } from 'path'
 import * as rfs from 'require-from-string'
 
-@suite('Unit::Scaffold::Base')
+@suite('Unit::Scaffold::FrontendIndex')
 class Test {
   @test
   'can be initialized'() {
@@ -38,7 +38,7 @@ class Test {
 
   @test
   'can be required from JS'() {
-    const gen = new FrontendIndex(['.'])
+    const gen = new FrontendIndex([])
     const code = translateCode(gen.toString())
     const mod = rfs(code)
     mod.should.be.an('object')
