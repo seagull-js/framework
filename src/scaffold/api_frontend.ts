@@ -13,7 +13,7 @@ export function ApiFrontend(): Class {
     return this.html(html)
   `
   const opts = { path: '/*', method: 'GET', body }
-  const gen = API('Frontent', opts)
+  const gen = API('Frontend', opts)
   gen.addNamedImports('@seagull/framework', ['Routing', 'Document'])
   gen.addNamedImports('react-dom/server', ['renderToString'])
   gen.addNamedImports('typestyle', ['getStyles'])

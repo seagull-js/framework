@@ -1,5 +1,5 @@
 export * from './transpile'
-export { Compiler } from './compiler'
+export * from './compiler'
 export * from './helper'
-// export { Bundler } from './bundler'
+export { Bundler } from './bundler'
 // export * from './transforms'

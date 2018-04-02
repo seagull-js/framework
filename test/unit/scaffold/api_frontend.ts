@@ -9,7 +9,7 @@ class CodegenApiFrontendTest {
   'can generate SSR API'() {
     const gen = ApiFrontend()
     const code = gen.toString()
-    expect(code).to.contain('export default class Frontent extends API {')
+    expect(code).to.contain('export default class Frontend extends API {')
     expect(code).to.contain('async handle(request: Request): Promise<Response>')
   }
 

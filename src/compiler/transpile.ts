@@ -90,8 +90,18 @@ export function listFiles(cwd: string): string[] {
 
 // modify the script exports for lambda usage
 function modifyApiCodeExports(code: string): string {
-  const isAPI = code.includes('extends framework_1.API')
+  const isAPI = code.includes('framework_1.API')
+  return isAPI ? modify1(modify2(code)) : code
+}
+
+function modify1(code: string): string {
   const matcher = /(exports.default = (\w+))/
   const replacer = '$1;\nexports.handler = $2.dispatch.bind($2)'
-  return isAPI ? code.replace(matcher, replacer) : code
+  return code.replace(matcher, replacer)
+}
+
+function modify2(code: string): string {
+  const matcher = /(exports\["default"\] = (\w+))/
+  const replacer = '$1;\nexports["handler"] = $2.dispatch.bind($2)'
+  return code.replace(matcher, replacer)
 }

@@ -91,7 +91,8 @@ export class Compiler {
   }
 
   private createFrontendIndex() {
-    const files = listFiles(join(this.srcFolder, 'frontend', 'pages'))
+    const pagesRoot = join(this.dstFolder, 'frontend', 'pages')
+    const files = listFiles(pagesRoot).map(f => relative(pagesRoot, f))
     const pages = files.map(f => './pages/' + f)
     const index = new FrontendIndex(pages).toString()
     const indexPath = join(this.dstFolder, 'frontend', 'index.js')
