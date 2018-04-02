@@ -1,6 +1,6 @@
 /** @module Scaffold */
 
-import Ast, { VariableDeclarationType, VariableStatement } from 'ts-simple-ast'
+import Ast, { VariableDeclarationKind, VariableStatement } from 'ts-simple-ast'
 import { Base } from './'
 
 export class FrontendIndex extends Base {
@@ -13,12 +13,12 @@ export class FrontendIndex extends Base {
   }
 
   private addExports(name: string, files: string[] = []) {
-    const declarationType = VariableDeclarationType.Const
+    const declarationKind = VariableDeclarationKind.Const
     const list = files.map(file => `require('${file}')`).join(',')
     const initializer = `[${list}]`
     const declarations = [{ name, initializer }]
     this.pagesDeclaration = this.sourceFile
-      .addVariableStatement({ declarationType, declarations })
+      .addVariableStatement({ declarationKind, declarations })
       .setIsExported(true)
   }
 }
