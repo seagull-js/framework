@@ -26,13 +26,26 @@ export function transpileFile(from: string, to: string, opts?: any) {
  * @param opts tsconfig settings
  */
 export function transpileCode(sourceText: string, to: string, opts?: any) {
+  const code = translateCode(sourceText, opts)
+  write(to, code)
+}
+
+/**
+ * Transpile a given blob of typescript code directly to a javascript blob.
+ * Will append an additional export (besides `default`) called `dispatch` which
+ * has a proper `this` bound to it on APIs, needed for AWS Lambda invokes.
+ *
+ * @param sourceText the code as string representation
+ * @param to absolute path to the destination file
+ * @param opts tsconfig settings
+ */
+export function translateCode(sourceText: string, opts?: any): string {
   const module = ts.ModuleKind.CommonJS
   const target = ts.ScriptTarget.ES2015
   const compilerOptions = opts || { module, target }
   compilerOptions.jsx = ts.JsxEmit.React
   const { outputText } = ts.transpileModule(sourceText, { compilerOptions })
-  const code = modifyApiCodeExports(outputText)
-  write(to, code)
+  return modifyApiCodeExports(outputText)
 }
 
 /**
@@ -60,8 +73,12 @@ function write(filePath: string, content: string | Buffer) {
   fs.writeFileSync(filePath, content)
 }
 
-// get a tree of files existing in the given source folder
-function listFiles(cwd: string): string[] {
+/**
+ * get a tree of files existing in the given source folder
+ *
+ * @param cwd root folder for walking down the tree
+ */
+export function listFiles(cwd: string): string[] {
   if (fs.lstatSync(cwd).isFile()) {
     return [cwd]
   } else {

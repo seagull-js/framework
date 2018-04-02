@@ -1,9 +1,10 @@
+import { FrontendIndex } from '@scaffold'
 import * as chokidar from 'chokidar'
 import * as cnm from 'copy-node-modules'
 import * as fs from 'fs'
 import { join, relative, resolve } from 'path'
 import * as ts from 'typescript'
-import { log, transpileFile, transpileFolder } from './'
+import { listFiles, transpileCode, transpileFile, transpileFolder } from './'
 
 export class Compiler {
   /** directory names where code resides */
@@ -32,11 +33,10 @@ export class Compiler {
   /** watch the [[srcFolder]] and transpile individual files on change */
   watch() {
     const folders = this.codeFolders.map(f => join(this.srcFolder, f))
-    this.watcher = chokidar
-      .watch(folders, { ignoreInitial: false })
-      .on('add', this.compileCodeFile)
-      .on('change', this.compileCodeFile)
-      .on('unlink', this.deleteFile)
+    this.watcher = chokidar.watch(folders, { ignoreInitial: false })
+    this.watcher.on('add', this.compileCodeFile)
+    this.watcher.on('change', this.compileCodeFile)
+    this.watcher.on('unlink', this.deleteFile)
   }
 
   stop() {
@@ -49,6 +49,7 @@ export class Compiler {
    */
   async finalize() {
     this.copyPackageJson()
+    this.createFrontendIndex()
     await this.copyNodeModules()
   }
 
@@ -87,5 +88,13 @@ export class Compiler {
     const from = join(this.srcFolder, 'package.json')
     const to = join(this.srcFolder, '.seagull', 'package.json')
     fs.writeFileSync(to, fs.readFileSync(from))
+  }
+
+  private createFrontendIndex() {
+    const files = listFiles(join(this.srcFolder, 'frontend', 'pages'))
+    const pages = files.map(f => './pages/' + f)
+    const index = new FrontendIndex(pages).toString()
+    const indexPath = join(this.dstFolder, 'frontend', 'index.js')
+    transpileCode(index, indexPath)
   }
 }

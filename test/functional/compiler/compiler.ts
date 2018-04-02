@@ -71,8 +71,10 @@ class Test extends FunctionalTest {
     const compiler = new Compiler('./tmp/demo')
     compiler.compile()
     await compiler.finalize()
-    const files = fs.readdirSync('./tmp/demo/.seagull')
-    files.should.be.deep.equal(['dist', 'node_modules', 'package.json'])
+    const rootFiles = fs.readdirSync('./tmp/demo/.seagull')
+    rootFiles.should.be.deep.equal(['dist', 'node_modules', 'package.json'])
+    const frontendFiles = fs.readdirSync('./tmp/demo/.seagull/dist/frontend')
+    frontendFiles.should.be.deep.equal(['index.js', 'pages'])
     // TODO: serverless.yaml
     // TODO: bundle.js
   }
