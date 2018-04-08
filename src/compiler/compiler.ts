@@ -1,233 +1,101 @@
-import { existsSync, lstatSync, readFileSync, unlinkSync } from 'fs'
-import { cloneDeep, noop } from 'lodash'
-import { extname, join, relative } from 'path'
-import * as shell from 'shelljs'
+import { FrontendIndex } from '@scaffold'
+import * as chokidar from 'chokidar'
+import * as cnm from 'copy-node-modules'
+import * as fs from 'fs'
+import { join, relative, resolve } from 'path'
 import * as ts from 'typescript'
-import { binPath, log } from './helper'
-
-// polyfill
-;(Symbol as any).asyncIterator =
-  Symbol.asyncIterator || Symbol.for('Symbol.asyncIterator')
+import { listFiles, transpileCode, transpileFile, transpileFolder } from './'
 
 export class Compiler {
-  // useful so we can get semantic errors
-  // incremental tsc compiling does only support syntactic checking
-  static compile() {
-    shell.config.fatal = true
-    shell.exec(join(process.cwd(), 'node_modules', '.bin', 'tsc'))
+  /** directory names where code resides */
+  codeFolders: string[] = ['backend', 'frontend']
+  /** where to read files from */
+  dstFolder: string
+  /** where to write results to */
+  srcFolder: string
+  /** a parsed tsconfig file */
+  tsConfig: object
+  /** reference to a file watcher instance */
+  watcher: chokidar.FSWatcher
+
+  /** just sets up common settings like folder paths */
+  constructor(srcFolder: string) {
+    this.srcFolder = resolve(srcFolder)
+    this.dstFolder = join(this.srcFolder, '.seagull', 'dist')
+    this.loadTsConfig()
   }
 
-  private conf: ts.ParsedCommandLine
-  private host: ts.WatchCompilerHostOfFilesAndCompilerOptions<ts.BuilderProgram>
-  private tsc: ts.WatchOfFilesAndCompilerOptions<ts.BuilderProgram>
-  private watchedFiles: string[]
-  private tscFileWatcher: ts.FileWatcher[] = []
-
-  private wait: {
-    compile?: Promise<null>
-    resolve?: (running: boolean) => void
-  }
-  private counter = 0
-
-  constructor() {
-    // ts config
-    const tsConfig = JSON.parse(
-      readFileSync(join(process.cwd(), 'tsconfig.json'), 'utf-8')
-    )
-    // load and configure tsc config object
-    this.conf = ts.parseJsonConfigFileContent(
-      tsConfig,
-      this.getTsSys(),
-      process.cwd()
-    )
-    this.conf.options.diagnostics = true
-    this.conf.options.extendedDiagnostics = true
-
-    // create host config
-    this.host = ts.createWatchCompilerHost(
-      this.conf.fileNames,
-      this.conf.options,
-      this.getTsSys(),
-      undefined
-    )
-
-    this.host.trace = () => {
-      return
-    }
-    this.host.onWatchStatusChange = this.onWatchStatusChange.bind(this)
-    this.host.afterProgramCreate = this.onCompilerMessage.bind(this)
-    this.watchedFiles = this.conf.fileNames
-    // set first compile promise
-    this.createCompilePromise()
+  /** transpile complete [[srcFolder]] to [[dstFolder]] once */
+  compile() {
+    this.codeFolders.forEach(folder => this.compileCodeFolder(folder))
   }
 
-  // start watching compilation
-  watch = async function*(this: Compiler) {
-    this.counter = 1
-    this.tsc = ts.createWatchProgram(this.host)
-    while (await this.wait.compile) {
-      this.createCompilePromise()
-      yield true
-    }
+  /** watch the [[srcFolder]] and transpile individual files on change */
+  watch() {
+    const folders = this.codeFolders.map(f => join(this.srcFolder, f))
+    this.watcher = chokidar.watch(folders, { ignoreInitial: false })
+    this.watcher.on('add', this.compileCodeFile)
+    this.watcher.on('change', this.compileCodeFile)
+    this.watcher.on('unlink', this.deleteFile)
   }
 
   stop() {
-    this.tscFileWatcher.forEach(w => w.close())
-    if (this.tsc) {
-      this.tsc.updateRootFileNames([])
-    }
-    this.host.trace = () => {
-      return
-    }
-    this.host.onWatchStatusChange = () => {
-      return
-    }
-    this.host.afterProgramCreate = () => {
-      return
-    }
-    this.wait.resolve(false)
+    this.watcher.close()
   }
 
-  private getTsSys(): ts.System {
-    const sys = cloneDeep(ts.sys)
-    sys.watchFile = (
-      path: string,
-      callback: ts.FileWatcherCallback,
-      pollingInterval: number
-    ): ts.FileWatcher => {
-      const wrappedCB = (
-        fileName: string,
-        eventKind: ts.FileWatcherEventKind
-      ) => {
-        // events
-        /*
-          Created = 0,
-          Changed = 1,
-          Deleted = 2,
-        */
-        if (!this.isInWatchedDir(fileName)) {
-          return callback(fileName, eventKind)
-        }
-        if (eventKind === 1) {
-          this.changedWatchedFile(fileName)
-        }
-        if (eventKind === 2) {
-          this.deletedWatchedFile(fileName)
-        }
-        callback(fileName, eventKind)
-      }
-      const watcher = ts.sys.watchFile(path, wrappedCB, pollingInterval)
-      this.tscFileWatcher.push(watcher)
-
-      return watcher
-    }
-    sys.watchDirectory = (
-      path: string,
-      callback: ts.DirectoryWatcherCallback,
-      recursive: boolean
-    ): ts.FileWatcher => {
-      const wrappedCB = fileName => {
-        if (
-          this.isInWatchedDir(fileName) &&
-          existsSync(fileName) &&
-          lstatSync(fileName).isFile()
-        ) {
-          this.addWatchedFile(fileName)
-        }
-        return callback(fileName)
-      }
-      const watcher = ts.sys.watchDirectory(path, wrappedCB, recursive)
-      this.tscFileWatcher.push(watcher)
-      return watcher
-    }
-    return sys
+  /**
+   * Execute finishing touches before deployment, like copying node_modules,
+   * bundling the frontend or generating serverless.yml file
+   */
+  async finalize() {
+    this.copyPackageJson()
+    this.createFrontendIndex()
+    await this.copyNodeModules()
   }
 
-  private isInWatchedDir(path: string) {
-    return Object.keys(this.conf.wildcardDirectories).reduce(
-      (acc, wDir) =>
-        acc ? !!acc : path.toLowerCase().startsWith(wDir.toLowerCase()),
-      false
-    )
+  private compileCodeFolder(name: string): void {
+    const from = resolve(join(this.srcFolder, name))
+    const to = resolve(join(this.dstFolder, name))
+    transpileFolder(from, to, this.tsConfig)
   }
 
-  private createCompilePromise() {
-    this.wait = {}
-    const handle = (res, rej) => {
-      this.wait.resolve = res
-    }
-    this.wait.compile = new Promise(handle)
+  private compileCodeFile(path: string): void {
+    const from = resolve(path)
+    const fragment = relative(this.srcFolder, from).replace(/tsx?$/, 'js')
+    const to = resolve(join(this.dstFolder, fragment))
+    transpileFile(from, to, this.tsConfig)
   }
 
-  private changedWatchedFile(filePath) {
-    this.counter++
-    log('Watched file changed:', filePath)
+  private deleteFile(from: string): void {
+    const to = resolve(relative(this.srcFolder, from)).replace(/tsx?$/, 'js')
+    fs.unlinkSync(to)
   }
 
-  private addWatchedFile(filePath: string) {
-    if (!this.tsc || this.watchedFiles.indexOf(filePath) > -1) {
-      return
-    }
-    log('Watching new file:', filePath)
-    this.counter++
-    this.watchedFiles = this.watchedFiles.concat(filePath)
-    this.tsc.updateRootFileNames(this.watchedFiles)
+  private loadTsConfig() {
+    const file = resolve(join(this.srcFolder, 'tsconfig.json'))
+    const exists = fs.existsSync(file)
+    const reader = path => fs.readFileSync(path, 'utf-8')
+    this.tsConfig = exists ? ts.readConfigFile(file, reader) : null
   }
 
-  private deletedWatchedFile(filePath: string) {
-    this.watchedFiles = this.watchedFiles.filter(file => file !== filePath)
-    this.tsc.updateRootFileNames(this.watchedFiles)
-    this.counter++
-
-    let compiledFile = join(
-      '.seagull',
-      'dist',
-      relative(process.cwd(), filePath)
-    )
-    const ext = extname(compiledFile)
-    compiledFile = compiledFile.replace(RegExp(`${ext}$`), '')
-    const obseleteJs = compiledFile + '.js'
-    const obseleteJsMap = compiledFile + '.js.map'
-    if (existsSync(obseleteJs)) {
-      unlinkSync(obseleteJs)
-    }
-    if (existsSync(obseleteJsMap)) {
-      unlinkSync(obseleteJsMap)
-    }
-    log('Removing file', filePath)
+  private copyNodeModules() {
+    const from = this.srcFolder
+    const to = join(this.srcFolder, '.seagull')
+    return new Promise(done => cnm(from, to, () => done()))
   }
 
-  private onWatchStatusChange(diagnostic: ts.Diagnostic, newline: string) {
-    if (diagnostic.code !== 6042) {
-      return
-    }
-    if (this.counter === 1) {
-      log('Compile finished. Waiting for file changes')
-    }
-    if (this.counter > 0) {
-      this.counter--
-      this.wait.resolve(true)
-    }
+  private copyPackageJson() {
+    const from = join(this.srcFolder, 'package.json')
+    const to = join(this.srcFolder, '.seagull', 'package.json')
+    fs.writeFileSync(to, fs.readFileSync(from))
   }
 
-  private onCompilerMessage(programInfo: ts.BuilderProgram) {
-    programInfo.emit()
-    const diagnostics = programInfo.getSyntacticDiagnostics()
-    diagnostics.forEach(diagnostic => {
-      this.logDiagnostic(diagnostic)
-    })
-  }
-
-  private logDiagnostic(dg: ts.Diagnostic) {
-    const message = ts.flattenDiagnosticMessageText(dg.messageText, '\n')
-
-    if (!dg.file) {
-      log(`  Error: ${message}`)
-      return
-    }
-
-    const pos = dg.file.getLineAndCharacterOfPosition(dg.start!)
-    const positionDisplay = `${pos.line + 1},${pos.character + 1}`
-    log(` Error ${dg.file.fileName} (${positionDisplay}): ${message}`)
+  private createFrontendIndex() {
+    const pagesRoot = join(this.dstFolder, 'frontend', 'pages')
+    const files = listFiles(pagesRoot).map(f => relative(pagesRoot, f))
+    const pages = files.map(f => './pages/' + f)
+    const index = new FrontendIndex(pages).toString()
+    const indexPath = join(this.dstFolder, 'frontend', 'index.js')
+    transpileCode(index, indexPath)
   }
 }

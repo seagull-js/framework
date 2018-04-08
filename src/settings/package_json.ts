@@ -19,7 +19,7 @@ export class PackageJson {
   name: string
 
   constructor(private path?: string) {
-    process.env.config_mock ? this.loadFromMock() : this.loadFromFile()
+    this.loadFromFile()
   }
 
   /**
@@ -49,14 +49,6 @@ export class PackageJson {
     const pkg = JSON.parse(require('fs').readFileSync(this.path, 'utf-8'))
     pkg.seagull = this.config
     require('fs').writeFileSync(this.path, JSON.stringify(pkg, null, 2))
-  }
-
-  // dirty trick to load mocked data
-  private loadFromMock() {
-    const cfg = new Config()
-    const { name, seagull } = JSON.parse(process.env.config_mock)
-    this.name = name
-    this.config = Object.assign(cfg, seagull)
   }
 
   // load an actual file

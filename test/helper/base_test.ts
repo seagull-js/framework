@@ -1,4 +1,5 @@
 import * as mockFS from 'mock-fs'
+import * as mockRequire from 'mock-require'
 
 /**
  * Implements common functionality that will be used across all tests.
@@ -10,6 +11,11 @@ export default class BaseTest {
    * before you mock folders.
    */
   mockFolder = path => mockFS({ [path]: {} })
+
+  /**
+   * mock all calls to @seagull/framework
+   */
+  mockRequire = () => mockRequire('@seagull/framework', '../../src/core/index')
 
   /**
    * resets all mocking done by [[mockFolder]]. use after test is done.

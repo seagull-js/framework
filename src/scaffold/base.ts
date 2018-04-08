@@ -1,13 +1,13 @@
 /** @module Scaffold */
 import { writeFileSync } from 'fs'
 import * as prettier from 'prettier'
-import Ast, { IndentationText, QuoteType, SourceFile } from 'ts-simple-ast'
+import Ast, { IndentationText, QuoteKind, SourceFile } from 'ts-simple-ast'
 import * as ts from 'typescript'
 
 const astSettings = {
   manipulationSettings: {
     indentationText: IndentationText.TwoSpaces,
-    quoteType: QuoteType.Single,
+    quoteType: QuoteKind.Single,
     scriptTarget: ts.ScriptTarget.Latest,
   },
   useVirtualFileSystem: true,

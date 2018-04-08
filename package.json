@@ -7,11 +7,12 @@
     "types": "dist/src/index.d.js",
     "scripts": {
         "build": "rm -rf dist && tsc",
+        "coverage": "nyc npm run test",
         "test:functional": "NODE_ENV=test mocha --opts test/functional/mocha.opts",
         "test:functional:watch": "npm run test:functional -- --watch --reporter min",
         "test:unit": "NODE_ENV=test mocha --opts test/unit/mocha.opts",
         "test:unit:watch": "npm run test:unit -- --watch --reporter min",
-        "test": "NODE_ENV=test nyc mocha --opts test/mocha.opts",
+        "test": "NODE_ENV=test mocha --opts test/mocha.opts",
         "test:watch": "npm run test -- --watch --reporter min",
         "docs": "rm -rf docs && typedoc --mode modules --excludeExternals --excludePrivate --excludeNotExported --out docs src"
     },
@@ -23,6 +24,7 @@
     "license": "LGPL-3.0",
     "devDependencies": {
         "@types/chai": "^4.1.2",
+        "@types/chokidar": "^1.7.5",
         "@types/history": "^4.6.2",
         "@types/lodash": "^4.14.103",
         "@types/mocha": "^2.2.48",
@@ -45,7 +47,7 @@
         "tslint-config-prettier": "^1.8.0",
         "typedoc": "^0.11.1",
         "typedoc-plugin-external-module-name": "^1.1.1",
-        "typescript": "^2.7.2"
+        "typescript": "^2.8.1"
     },
     "dependencies": {
         "@types/react": "^16.1.0",
@@ -53,8 +55,10 @@
         "aws-lambda": "^0.1.2",
         "browserify": "^16.1.1",
         "browserify-incremental": "^3.1.1",
+        "chokidar": "^2.0.3",
         "clime": "^0.5.9",
         "cloudformation-declarations": "^0.1.2",
+        "copy-node-modules": "^1.0.4",
         "csstips": "^0.2.3",
         "dashify": "^1.0.0",
         "decache": "^4.4.0",
@@ -70,11 +74,12 @@
         "react-router-dom": "^4.2.2",
         "reflect-metadata": "^0.1.12",
         "require-from-string": "^2.0.1",
+        "rimraf": "^2.6.2",
         "shelljs": "^0.8.1",
         "shortid": "^2.2.8",
         "stoppable": "^1.0.5",
         "stream-to-string": "^1.1.0",
-        "ts-simple-ast": "^8.1.0",
+        "ts-simple-ast": "^10.1.0",
         "typescript-memoize": "^1.0.0-alpha.3",
         "typestyle": "^1.7.2",
         "uglify-es": "^3.3.9",
@@ -82,7 +87,7 @@
     },
     "peerDependencies": {
         "aws-sdk": "^2.209.0",
-        "typescript": "^2.7.2"
+        "typescript": "^2.8.1"
     },
     "nyc": {
         "extension": [".ts", ".tsx"],

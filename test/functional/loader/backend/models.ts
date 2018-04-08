@@ -1,3 +1,4 @@
+import { transpileFolder } from '@compiler'
 import { Models } from '@loader'
 import { Model } from '@scaffold'
 import 'chai/register-should'
@@ -5,7 +6,6 @@ import * as fs from 'fs'
 import { skip, slow, suite, test, timeout } from 'mocha-typescript'
 import { join } from 'path'
 import FunctionalTest from '../../../helper/functional_test'
-import { transpileFolder } from '../../../helper/transpile'
 
 @suite('Functional::Loader::Models')
 class Test extends FunctionalTest {

@@ -1,27 +1,20 @@
-import {
-  addImportIndexFile,
-  modifyScriptExports,
-  writeConfig,
-} from '@seagull/build-tools'
 import { Command, command, Context, metadata, option, Options } from 'clime'
 import { existsSync, writeFileSync } from 'fs'
 import * as dir from 'node-dir'
 import { join } from 'path'
 import * as shell from 'shelljs'
-import { cleanBuildDirectory } from '../lib/build/helper'
-import {
-  copyAssets,
-  createServerlessYaml,
-  initFolder,
-  lint,
-  prettier,
-} from '../lib/build/helper'
+import { Bundler, Compiler } from '../../compiler'
+// import {
+//   copyAssets,
+//   createServerlessYaml,
+//   initFolder,
+//   lint,
+//   prettier,
+// } from '../lib/build/helper'
 
-import { Bundler } from '@seagull/build-tools'
-import { Compiler } from '@seagull/build-tools'
 import { getAccountId } from '../lib/context'
 
-class BuildOptions extends Options {
+export class BuildOptions extends Options {
   @option({
     default: true,
     description: 'do an optimized build',
@@ -40,20 +33,18 @@ export default class extends Command {
   async execute(options?: BuildOptions) {
     const optimize =
       options && process.env.NODE_ENV !== 'test' ? options.optimize : false
-    if (process.env.NODE_ENV !== 'test') {
-      lint()
-      prettier()
-    }
-    cleanBuildDirectory()
-    initFolder()
-    Compiler.compile()
-    modifyScriptExports()
-    addImportIndexFile()
-    copyAssets()
-    writeConfig()
-    await Bundler.bundle(optimize)
-
+    // if (process.env.NODE_ENV !== 'test') {
+    //   lint()
+    //   prettier()
+    // }
+    // cleanBuildDirectory()
+    // initFolder()
+    const compiler = new Compiler(process.cwd())
+    compiler.compile()
+    compiler.finalize()
+    // copyAssets()
+    // await Bundler.bundle(optimize)
     const accountId = await getAccountId()
-    createServerlessYaml(accountId)
+    // createServerlessYaml(accountId)
   }
 }

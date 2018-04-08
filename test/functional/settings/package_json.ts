@@ -29,8 +29,8 @@ class Test extends FunctionalTest {
   @test
   'can load specific file'() {
     const mock = { seagull: { domains: ['example.com'] } }
-    this.mockPackageFile('/tmp', JSON.stringify(mock))
-    const pkg = new PackageJson('/tmp/package.json')
+    this.mockPackageFile('./tmp', JSON.stringify(mock))
+    const pkg = new PackageJson('./tmp/package.json')
     pkg.config.should.be.an('object')
     pkg.config.domains.should.be.an('array')
     pkg.config.domains[0].should.be.equal('example.com')
@@ -39,18 +39,18 @@ class Test extends FunctionalTest {
   @test
   'can enable analytics and save changes to file'() {
     const mock = { seagull: { domains: ['example.com'] } }
-    this.mockPackageFile('/tmp', JSON.stringify(mock))
-    new PackageJson('/tmp/package.json').enableAnalytics('UA-XXXXXX')
-    const pkg = new PackageJson('/tmp/package.json')
+    this.mockPackageFile('./tmp', JSON.stringify(mock))
+    new PackageJson('./tmp/package.json').enableAnalytics('UA-XXXXXX')
+    const pkg = new PackageJson('./tmp/package.json')
     pkg.config.hasAnalytics().should.be.equal(true)
   }
 
   @test
   'can add domains and save changes to file'() {
     const mock = { seagull: { domains: ['example.com'] } }
-    this.mockPackageFile('/tmp', JSON.stringify(mock))
-    new PackageJson('/tmp/package.json').addDomain('example.com')
-    const pkg = new PackageJson('/tmp/package.json')
+    this.mockPackageFile('./tmp', JSON.stringify(mock))
+    new PackageJson('./tmp/package.json').addDomain('example.com')
+    const pkg = new PackageJson('./tmp/package.json')
     pkg.config.domains.should.be.an('array')
     pkg.config.domains[0].should.be.equal('example.com')
   }
@@ -58,8 +58,8 @@ class Test extends FunctionalTest {
   @test
   'has default aws region'() {
     const mock = { seagull: {} }
-    this.mockPackageFile('/tmp', JSON.stringify(mock))
-    const pkg = new PackageJson('/tmp/package.json')
+    this.mockPackageFile('./tmp', JSON.stringify(mock))
+    const pkg = new PackageJson('./tmp/package.json')
     pkg.config.should.be.an('object')
     pkg.config.region.should.be.equal('eu-west-1')
   }
@@ -67,8 +67,8 @@ class Test extends FunctionalTest {
   @test
   'can load aws region'() {
     const mock = { seagull: { region: 'eu-central-1' } }
-    this.mockPackageFile('/tmp', JSON.stringify(mock))
-    const pkg = new PackageJson('/tmp/package.json')
+    this.mockPackageFile('./tmp', JSON.stringify(mock))
+    const pkg = new PackageJson('./tmp/package.json')
     pkg.config.should.be.an('object')
     pkg.config.region.should.be.equal('eu-central-1')
   }
@@ -76,8 +76,8 @@ class Test extends FunctionalTest {
   @test
   'can load name'() {
     const mock = { name: 'myapp', seagull: {} }
-    this.mockPackageFile('/tmp', JSON.stringify(mock))
-    const pkg = new PackageJson('/tmp/package.json')
+    this.mockPackageFile('./tmp', JSON.stringify(mock))
+    const pkg = new PackageJson('./tmp/package.json')
     pkg.config.should.be.an('object')
     pkg.name.should.be.equal('myapp')
   }

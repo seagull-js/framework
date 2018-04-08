@@ -1,6 +1,5 @@
 import * as fs from 'fs'
 import * as mockFS from 'mock-fs'
-import * as mockRequire from 'mock-require'
 import BaseTest from './base_test'
 
 export default class FunctionalTest extends BaseTest {
@@ -20,11 +19,6 @@ export default class FunctionalTest extends BaseTest {
    * mock a directory with a given package.json file
    */
   mockPackageFile = (path, txt) => mockFS({ [path]: { 'package.json': txt } })
-
-  /**
-   * mock all calls to @seagull/framework
-   */
-  mockRequire = () => mockRequire('@seagull/framework', '../../src/core/index')
 
   /**
    * set environment variables to lambda execution environment
